@@ -1,0 +1,14 @@
+{
+  "name": "lab-booking-system",
+  "version": "1.0.0",
+  "description": "Private Lab Limited - Engineering Department Portal",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && node index.js",
+    "client": "cd frontend && npm run dev",
+    "seed": "cd backend && node seed.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
