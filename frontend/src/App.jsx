@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import EquipmentList from './pages/EquipmentList';
 import BookingPage from './pages/BookingPage';
+import ExperimentDetail from './pages/ExperimentDetail';
 import Home from './pages/Home';
 import AdminUsers from './pages/AdminUsers';
 import Approvals from './pages/Approvals';
@@ -114,6 +115,7 @@ function AppContent() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/equipment" element={<ProtectedRoute><EquipmentList /></ProtectedRoute>} />
           <Route path="/book/:id" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+          <Route path="/experiment/:id" element={<ProtectedRoute roles={['Staff', 'Admin']}><ExperimentDetail /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute roles={['Admin']}><AdminUsers /></ProtectedRoute>} />
           <Route path="/approvals" element={<ProtectedRoute roles={['Admin','Staff']}><Approvals /></ProtectedRoute>} />
         </Routes>

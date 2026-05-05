@@ -19,9 +19,17 @@ const EquipmentList = () => {
     const [showEqModal, setShowEqModal] = useState(false);
     const [showWaitlistModal, setShowWaitlistModal] = useState(null);
     const [showRateModal, setShowRateModal] = useState(null);
+    const [showProcedureModal, setShowProcedureModal] = useState(null);
     
     // Forms
-    const [formData, setFormData] = useState({ name: '', description: '', status: 'available', category: 'Electronics', pricePerHour: 50, totalSlots: 5, labNumber: 1, condition: 'Good', location: 'Lab A' });
+    const [formData, setFormData] = useState({ 
+        name: '', description: '', status: 'available', category: 'Electronics', 
+        pricePerHour: 50, totalSlots: 5, labNumber: 1, condition: 'Good', 
+        location: 'Lab A', experimentSteps: '', moreDescription: '', 
+        toolType: '', aim: '', requiredMaterials: '', formula: '', 
+        conclusion: '', theory: '', safetyPrecautions: '', 
+        observationsTable: '', vivaQuestions: '', homePrep: '' 
+    });
     const [waitlistForm, setWaitlistForm] = useState({ date: '', startTime: '', endTime: '' });
     const [rateForm, setRateForm] = useState({ rating: 5, review: '' });
     
@@ -63,8 +71,19 @@ const EquipmentList = () => {
         try {
             const token = localStorage.getItem('token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            if (editId) { await axios.put(`http://localhost:5000/api/equipment/${editId}`, formData, config); }
-            else { await axios.post('http://localhost:5000/api/equipment', formData, config); }
+            
+            // Format array fields: split by newline and filter empty
+            const formattedData = {
+                ...formData,
+                experimentSteps: formData.experimentSteps.split('\n').filter(s => s.trim()),
+                requiredMaterials: formData.requiredMaterials.split('\n').filter(m => m.trim()),
+                safetyPrecautions: formData.safetyPrecautions.split('\n').filter(p => p.trim()),
+                vivaQuestions: formData.vivaQuestions.split('\n').filter(q => q.trim()),
+                homePrep: formData.homePrep.split('\n').filter(h => h.trim())
+            };
+
+            if (editId) { await axios.put(`http://localhost:5000/api/equipment/${editId}`, formattedData, config); }
+            else { await axios.post('http://localhost:5000/api/equipment', formattedData, config); }
             setShowEqModal(false);
             toast.success('Asset registry updated');
             fetchEquipment();
@@ -72,7 +91,29 @@ const EquipmentList = () => {
     };
 
     const handleEqEdit = (eq) => {
-        setFormData({ name: eq.name, description: eq.description, status: eq.status, category: eq.category || 'Electronics', pricePerHour: eq.pricePerHour || 50, totalSlots: eq.totalSlots || 5, labNumber: eq.labNumber || 1, condition: eq.condition || 'Good', location: eq.location || 'Lab A' });
+        setFormData({ 
+            name: eq.name, 
+            description: eq.description, 
+            status: eq.status, 
+            category: eq.category || 'Electronics', 
+            pricePerHour: eq.pricePerHour || 50, 
+            totalSlots: eq.totalSlots || 5, 
+            labNumber: eq.labNumber || 1, 
+            condition: eq.condition || 'Good', 
+            location: eq.location || 'Lab A',
+            experimentSteps: (eq.experimentSteps || []).join('\n'),
+            moreDescription: eq.moreDescription || '',
+            toolType: eq.toolType || '',
+            aim: eq.aim || '',
+            requiredMaterials: (eq.requiredMaterials || []).join('\n'),
+            formula: eq.formula || '',
+            conclusion: eq.conclusion || '',
+            theory: eq.theory || '',
+            safetyPrecautions: (eq.safetyPrecautions || []).join('\n'),
+            observationsTable: eq.observationsTable || '',
+            vivaQuestions: (eq.vivaQuestions || []).join('\n'),
+            homePrep: (eq.homePrep || []).join('\n')
+        });
         setEditId(eq._id);
         setShowEqModal(true);
     };
@@ -238,7 +279,8 @@ const EquipmentList = () => {
                                     <span className="text-[0.65rem] font-black tracking-widest text-primary/60 group-hover:text-primary transition-colors">#{eq._id.slice(-6).toUpperCase()}</span>
                                     <span className={`badge ${statusBadge[eq.status]} border border-current opacity-80`} style={{ fontSize: '0.6rem' }}>{eq.status.toUpperCase()}</span>
                                 </div>
-                                <h3 className="font-extrabold text-xl mb-2 tracking-tight group-hover:text-primary transition-colors">{eq.name}</h3>
+                                <h3 className="font-extrabold text-xl mb-1 tracking-tight group-hover:text-primary transition-colors">{eq.name}</h3>
+                                <div className="text-[0.65rem] font-bold text-slate-500 uppercase tracking-widest mb-3">{eq.toolType || 'Standard Equipment'}</div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[0.65rem] px-2.5 py-1 rounded-full bg-white/5 text-slate-400 border border-white/10 font-bold uppercase tracking-wider">{eq.category}</span>
                                     {ratings[eq._id]?.count > 0 && (
@@ -254,8 +296,15 @@ const EquipmentList = () => {
                                 </div>
                             </div>
                             
-                            <div className="p-6 flex-1">
-                                <p className="text-sm text-slate-400 mb-6 line-clamp-3 leading-relaxed italic">"{eq.description || 'Precision-engineered asset maintained for high-stakes research and industrial protocols.'}"</p>
+                            <div className="p-6 flex-1 bg-gradient-to-b from-transparent to-black/20">
+                                <div className="mb-4">
+                                    <div className="text-[0.55rem] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                        <div className="w-4 h-px bg-slate-700"></div> Scientific Abstract
+                                    </div>
+                                    <p className="text-sm text-slate-400 line-clamp-3 leading-relaxed italic">
+                                        {eq.aim || eq.description || 'Precision-engineered asset maintained for high-stakes research and industrial protocols.'}
+                                    </p>
+                                </div>
                                 
                                 <div className="grid grid-cols-2 gap-4 mb-6">
                                     <div className="p-3 bg-black/40 rounded-xl border border-white/5 flex flex-col gap-1">
@@ -277,22 +326,44 @@ const EquipmentList = () => {
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-white/5 border-t border-white/5 flex gap-3">
+                            <div className="p-4 bg-white/5 border-t border-white/5 flex flex-col gap-4">
                                 {eq.status === 'available' ? (
-                                    <Link to={`/book/${eq._id}`} className="btn btn-primary flex-1 text-[0.7rem] font-black tracking-widest shadow-lg shadow-primary/20 h-11">
-                                        <Zap size={14} fill="currentColor" /> INITIATE ALLOCATION
-                                    </Link>
+                                    <div className="flex flex-col gap-3">
+                                        {user.role === 'Student' ? (
+                                            <>
+                                                <div className="flex items-center gap-2 px-3 py-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                                                    <Zap size={14} className="text-green-500" />
+                                                    <span className="text-[0.6rem] font-black text-green-500 uppercase tracking-widest">Instant Booking Available</span>
+                                                </div>
+                                                <Link to={`/book/${eq._id}`} className="btn btn-primary w-full text-[0.7rem] font-black tracking-widest shadow-lg shadow-primary/20 h-12 flex items-center justify-center gap-2">
+                                                    <Zap size={16} fill="currentColor" /> INITIALIZE MISSION BOOKING
+                                                </Link>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/20">
+                                                    <ShieldCheck size={14} className="text-primary" />
+                                                    <span className="text-[0.6rem] font-black text-primary uppercase tracking-widest">Manual Review Required</span>
+                                                </div>
+                                                <Link to={`/experiment/${eq._id}`} className="btn btn-primary w-full text-[0.7rem] font-black tracking-widest shadow-lg shadow-primary/20 h-12 flex items-center justify-center gap-2">
+                                                    <Microscope size={16} /> EXPLORE EXPERIMENT MANUAL
+                                                </Link>
+                                            </>
+                                        )}
+                                    </div>
                                 ) : (
-                                    <button onClick={() => setShowWaitlistModal(eq)} className="btn btn-outline flex-1 text-[0.7rem] font-black tracking-widest h-11 border-slate-700">
-                                        <Clock size={14} /> ENTER QUEUE
+                                    <button onClick={() => setShowWaitlistModal(eq)} className="btn btn-outline w-full text-[0.7rem] font-black tracking-widest h-12 border-slate-700 flex items-center justify-center gap-2">
+                                        <Clock size={16} /> ENTER WAITING QUEUE
                                     </button>
                                 )}
-                                <div className="flex gap-2">
-                                    <button onClick={() => openRateModal(eq)} className="protocol-btn p-0 w-11 h-11 justify-center border-slate-800" title="Rate Asset"><Star size={16} /></button>
+                                <div className="flex gap-2 border-t border-white/5 pt-3">
+                                    <button onClick={() => openRateModal(eq)} className="protocol-btn flex-1 h-10 justify-center border-slate-800 text-[0.6rem] font-bold gap-2" title="Rate Asset">
+                                        <Star size={14} /> EVALUATE
+                                    </button>
                                     {user.role === 'Admin' && (
                                         <>
-                                            <button onClick={() => handleEqEdit(eq)} className="protocol-btn p-0 w-11 h-11 justify-center border-slate-800" title="Edit Registry"><Edit size={16} /></button>
-                                            <button onClick={() => handleEqDelete(eq._id)} className="protocol-btn p-0 w-11 h-11 justify-center border-danger/20 text-danger" title="Decommission"><Trash2 size={16} /></button>
+                                            <button onClick={() => handleEqEdit(eq)} className="protocol-btn p-0 w-10 h-10 justify-center border-slate-800" title="Edit Registry"><Edit size={14} /></button>
+                                            <button onClick={() => handleEqDelete(eq._id)} className="protocol-btn p-0 w-10 h-10 justify-center border-danger/20 text-danger" title="Decommission"><Trash2 size={14} /></button>
                                         </>
                                     )}
                                 </div>
@@ -317,7 +388,7 @@ const EquipmentList = () => {
                                 <tr key={eq._id} className="border-t border-white/5 hover:bg-white/5 transition-all group">
                                     <td className="p-5">
                                         <div className="font-extrabold text-slate-200 group-hover:text-primary transition-colors">{eq.name}</div>
-                                        <div className="text-[0.65rem] text-slate-500 font-bold uppercase tracking-wider">{eq.location} • Sector {eq.labNumber}</div>
+                                        <div className="text-[0.65rem] text-slate-500 font-bold uppercase tracking-wider">{eq.toolType || 'Standard Asset'} • {eq.location}</div>
                                     </td>
                                     <td className="p-5">
                                         <span className="text-[0.6rem] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 font-black text-slate-400 uppercase tracking-widest">{eq.category}</span>
@@ -329,7 +400,7 @@ const EquipmentList = () => {
                                     <td className="p-5 text-right">
                                         <div className="flex gap-2 justify-end">
                                             {eq.status === 'available' ? (
-                                                <Link to={`/book/${eq._id}`} className="btn btn-primary btn-sm px-4 font-black text-[0.65rem] tracking-widest">ALLOCATE</Link>
+                                                <Link to={`/experiment/${eq._id}`} className="btn btn-primary btn-sm px-4 font-black text-[0.65rem] tracking-widest uppercase">Procedure</Link>
                                             ) : (
                                                 <button onClick={() => setShowWaitlistModal(eq)} className="btn btn-outline btn-sm px-4 font-black text-[0.65rem] tracking-widest border-slate-700">QUEUE</button>
                                             )}
@@ -359,6 +430,10 @@ const EquipmentList = () => {
                                 <input type="text" className="form-control" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
                             </div>
                             <div className="form-group">
+                                <label>Tool Type / Specialization</label>
+                                <input type="text" className="form-control" value={formData.toolType} onChange={e => setFormData({...formData, toolType: e.target.value})} placeholder="e.g. Lathe Machine, Reagent, Laser" />
+                            </div>
+                            <div className="form-group">
                                 <label>Protocol Description</label>
                                 <textarea className="form-control" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
                             </div>
@@ -386,28 +461,125 @@ const EquipmentList = () => {
                                     <input type="number" className="form-control" value={formData.totalSlots} onChange={e => setFormData({...formData, totalSlots: Number(e.target.value)})} />
                                 </div>
                             </div>
+                            <div className="form-group">
+                                <label>Detailed Experiment Procedure (One step per line)</label>
+                                <textarea className="form-control" rows={5} value={formData.experimentSteps} onChange={e => setFormData({...formData, experimentSteps: e.target.value})} placeholder="Step 1: Calibrate...&#10;Step 2: Connect..." />
+                            </div>
+                            <div className="form-group">
+                                <label>Advanced Asset Specifications</label>
+                                <textarea className="form-control" rows={3} value={formData.moreDescription} onChange={e => setFormData({...formData, moreDescription: e.target.value})} placeholder="Additional technical details, safety warnings, etc." />
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="form-group">
+                                    <label>Experiment Aim</label>
+                                    <textarea className="form-control" value={formData.aim} onChange={e => setFormData({...formData, aim: e.target.value})} placeholder="Primary objective of the lab mission..." />
+                                </div>
+                                <div className="form-group">
+                                    <label>Required Materials (One per line)</label>
+                                    <textarea className="form-control" value={formData.requiredMaterials} onChange={e => setFormData({...formData, requiredMaterials: e.target.value})} placeholder="Standard Lab Kit&#10;Safety Gear..." />
+                                </div>
+                                <div className="form-group">
+                                    <label>Mathematical Formula</label>
+                                    <input type="text" className="form-control" value={formData.formula} onChange={e => setFormData({...formData, formula: e.target.value})} placeholder="e.g. F = m × a" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Conclusion / Inference Template</label>
+                                    <textarea className="form-control" value={formData.conclusion} onChange={e => setFormData({...formData, conclusion: e.target.value})} placeholder="Expected outcome or analytical summary..." />
+                                </div>
+                                <div className="form-group">
+                                    <label>Theoretical Foundation</label>
+                                    <textarea className="form-control" rows={3} value={formData.theory} onChange={e => setFormData({...formData, theory: e.target.value})} placeholder="Underlying scientific principles..." />
+                                </div>
+                                <div className="form-group">
+                                    <label>Safety Precautions (One per line)</label>
+                                    <textarea className="form-control" value={formData.safetyPrecautions} onChange={e => setFormData({...formData, safetyPrecautions: e.target.value})} placeholder="Wear Goggles&#10;Check grounding..." />
+                                </div>
+                                <div className="form-group">
+                                    <label>Observations Table Template</label>
+                                    <textarea className="form-control font-mono" rows={3} value={formData.observationsTable} onChange={e => setFormData({...formData, observationsTable: e.target.value})} placeholder="SL | VAR A | VAR B | RES..." />
+                                </div>
+                                <div className="form-group">
+                                    <label>Viva-Voce Questions (One per line)</label>
+                                    <textarea className="form-control" value={formData.vivaQuestions} onChange={e => setFormData({...formData, vivaQuestions: e.target.value})} placeholder="Why use this sensor?&#10;Define precision..." />
+                                </div>
+                                <div className="form-group">
+                                    <label>Home Preparation Kit (One per line)</label>
+                                    <textarea className="form-control" value={formData.homePrep} onChange={e => setFormData({...formData, homePrep: e.target.value})} placeholder="White Lab Coat&#10;Observation Notebook..." />
+                                </div>
+                            </div>
                             <button type="submit" className="btn btn-primary w-full py-3 font-bold mt-4">EXECUTE UPDATE</button>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* Waitlist and Rate modals would go here - simplified for brevity but functional */}
-            {showWaitlistModal && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-                    <div className="card w-full max-w-sm">
-                        <h3 className="font-bold mb-4">Secure Queue Position</h3>
-                        <form onSubmit={joinWaitlist} className="space-y-4">
-                            <input type="date" className="form-control" value={waitlistForm.date} onChange={e => setWaitlistForm({...waitlistForm, date: e.target.value})} required />
-                            <div className="grid grid-cols-2 gap-2">
-                                <input type="time" className="form-control" value={waitlistForm.startTime} onChange={e => setWaitlistForm({...waitlistForm, startTime: e.target.value})} required />
-                                <input type="time" className="form-control" value={waitlistForm.endTime} onChange={e => setWaitlistForm({...waitlistForm, endTime: e.target.value})} required />
+            {/* Procedure Modal */}
+            {showProcedureModal && (
+                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[110] p-4 backdrop-blur-md">
+                    <div className="card w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border-primary/30 shadow-2xl shadow-primary/10">
+                        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-primary/5">
+                            <div>
+                                <div className="text-[0.6rem] text-primary font-black uppercase tracking-[0.2em] mb-1">Operational Protocol</div>
+                                <h2 className="text-2xl font-black text-slate-100">{showProcedureModal.name}</h2>
                             </div>
-                            <div className="flex gap-2">
-                                <button type="submit" className="btn btn-primary flex-1">Confirm</button>
-                                <button type="button" onClick={() => setShowWaitlistModal(null)} className="btn btn-outline flex-1">Cancel</button>
+                            <button onClick={() => setShowProcedureModal(null)} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><X size={24} /></button>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                            <div className="space-y-8">
+                                {/* Overview */}
+                                <div>
+                                    <h4 className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <div className="w-4 h-1 bg-primary"></div> Executive Summary
+                                    </h4>
+                                    <p className="text-slate-300 leading-relaxed text-sm">
+                                        {showProcedureModal.moreDescription || showProcedureModal.description || 'No advanced description available for this asset designation.'}
+                                    </p>
+                                </div>
+
+                                {/* Steps */}
+                                <div>
+                                    <h4 className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <div className="w-4 h-1 bg-primary"></div> Procedural Workflow
+                                    </h4>
+                                    <div className="space-y-4">
+                                        {showProcedureModal.experimentSteps && showProcedureModal.experimentSteps.length > 0 ? (
+                                            showProcedureModal.experimentSteps.map((step, index) => (
+                                                <div key={index} className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-colors">
+                                                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-xs shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="text-sm text-slate-200 leading-relaxed pt-1">{step}</div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="p-6 bg-white/5 rounded-xl border border-dashed border-white/10 text-center italic text-slate-500 text-sm">
+                                                Standard operating procedures pending administrative authorization.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Logistics */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 bg-black/40 rounded-xl border border-white/5">
+                                        <div className="text-[0.55rem] text-primary font-black uppercase tracking-widest mb-1">Supervisor</div>
+                                        <div className="text-xs font-bold text-slate-300">{showProcedureModal.facultyInCharge || 'Dept Head'}</div>
+                                    </div>
+                                    <div className="p-4 bg-black/40 rounded-xl border border-white/5">
+                                        <div className="text-[0.55rem] text-primary font-black uppercase tracking-widest mb-1">Technical Support</div>
+                                        <div className="text-xs font-bold text-slate-300">{showProcedureModal.labAssistant || 'On-call Staff'}</div>
+                                    </div>
+                                </div>
                             </div>
-                        </form>
+                        </div>
+
+                        <div className="p-6 bg-white/5 border-t border-white/5 flex gap-4">
+                            <button onClick={() => setShowProcedureModal(null)} className="btn btn-outline flex-1 h-12 font-black tracking-widest text-[0.7rem] border-slate-700">CLOSE PROTOCOL</button>
+                            <Link to={`/book/${showProcedureModal._id}`} className="btn btn-primary flex-[1.5] h-12 font-black tracking-widest text-[0.7rem] shadow-lg shadow-primary/20">
+                                <Zap size={16} fill="currentColor" /> INITIALIZE MISSION ALLOCATION
+                            </Link>
+                        </div>
                     </div>
                 </div>
             )}

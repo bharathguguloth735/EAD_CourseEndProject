@@ -20,6 +20,19 @@ const EquipmentSchema = new mongoose.Schema({
     labNumber: { type: Number, min: 1, max: 9, default: 1 },
     condition: { type: String, enum: ['Excellent', 'Good', 'Fair'], default: 'Good' },
     location: { type: String, default: 'Lab A' },
+    experimentSteps: [{ type: String }],
+    moreDescription: { type: String },
+    toolType: { type: String }, // e.g. "Lathe", "Reagent", "Spectrometer"
+    aim: { type: String },
+    requiredMaterials: [{ type: String }],
+    formula: { type: String },
+    conclusion: { type: String },
+    theory: { type: String },
+    safetyPrecautions: [{ type: String }],
+    diagramDesc: { type: String },
+    observationsTable: { type: String }, // Suggested format/columns
+    vivaQuestions: [{ type: String }],
+    homePrep: [{ type: String }], // Items to prepare at home (e.g., Lab Coat)
 }, { timestamps: true });
 
 module.exports = mongoose.model('Equipment', EquipmentSchema);

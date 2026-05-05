@@ -67,9 +67,12 @@ const Navbar = () => {
                                 <Link to="/" className="nav-link-caps">Home</Link>
                                 <Link to="/resources" className="nav-link-caps">Resources</Link>
                                 {user && (
-                                    <Link to="/dashboard" className="nav-link-caps">
-                                        {user.role?.toLowerCase() === 'staff' ? 'Staff Terminal' : 'Student Terminal'}
-                                    </Link>
+                                    <>
+                                        <Link to="/dashboard" className="nav-link-caps">
+                                            {user.role?.toLowerCase() === 'staff' ? 'Staff Terminal' : user.role === 'Admin' ? 'Command Center' : 'Student Terminal'}
+                                        </Link>
+                                        <Link to="/equipment" className="nav-link-caps">Asset Registry</Link>
+                                    </>
                                 )}
                                 {user?.role?.toLowerCase() === 'staff' && user.department && (
                                     <div style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', padding: '0.2rem 0.75rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 900, border: '1px solid rgba(139,92,246,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

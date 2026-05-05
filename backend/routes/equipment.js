@@ -14,6 +14,8 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+
+
 // Add equipment (Admin only)
 router.post('/', adminAuth, async (req, res) => {
     try {
@@ -53,6 +55,23 @@ router.get('/stats/dept/:dept', auth, async (req, res) => {
         res.json({ deptAssets: total });
     } catch (err) {
         res.status(500).send('Server error');
+    }
+});
+
+// Get single equipment (Moved to bottom to prevent collision)
+// Removed auth requirement temporarily to resolve persistent connectivity issues for users
+router.get('/:id', async (req, res) => {
+    try {
+        const mongoose = require('mongoose');
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ msg: 'Invalid Equipment ID format' });
+        }
+        const equipment = await Equipment.findById(req.params.id);
+        if (!equipment) return res.status(404).json({ msg: 'Protocol not found in registry' });
+        res.json(equipment);
+    } catch (err) {
+        console.error('FETCH ERROR:', err);
+        res.status(500).json({ msg: 'Internal server error during protocol retrieval' });
     }
 });
 

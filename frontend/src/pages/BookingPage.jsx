@@ -20,33 +20,43 @@ const BookingPage = () => {
     const { user } = useContext(AuthContext);
     const { toast } = useToast();
     const qrRef = useRef(null);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
     const [equipment, setEquipment] = useState(null);
     const [step, setStep] = useState(1); // 1=Select Slot, 2=Review & Payment, 3=Success
-    // Calculate current operational time for pre-fill
-    const now = new Date();
-    const nextHour = new Date(now);
-    if (now.getMinutes() > 0) {
+    // Calculate current operational time for pre-fill using local time
+    const getLocalDefaults = () => {
+        const now = new Date();
+        const nextHour = new Date(now);
         nextHour.setHours(now.getHours() + 1);
-    }
-    nextHour.setMinutes(0);
-    
-    // Default operational window (08:00 - 20:00)
-    let startH = nextHour.getHours();
-    let bookDate = now.toISOString().split('T')[0];
-    
-    if (startH >= 20) {
-        // Too late for today, set to tomorrow 8 AM
-        startH = 8;
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        bookDate = tomorrow.toISOString().split('T')[0];
-    } else if (startH < 8) {
-        startH = 8;
-    }
+        nextHour.setMinutes(0);
+        
+        let h = nextHour.getHours();
+        let d = new Date(now);
+        
+        if (h >= 20) { h = 8; d.setDate(d.getDate() + 1); }
+        else if (h < 8) { h = 8; }
+
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        
+        // Calculate max date (2 months from now)
+        const maxD = new Date(now);
+        maxD.setMonth(maxD.getMonth() + 2);
+        const maxDateStr = `${maxD.getFullYear()}-${String(maxD.getMonth() + 1).padStart(2, '0')}-${String(maxD.getDate()).padStart(2, '0')}`;
+        
+        const timeStr = `${String(h).padStart(2, '0')}:00`;
+        return { dateStr, timeStr, maxDateStr };
+    };
+
+    const defaults = getLocalDefaults();
 
     const [formData, setFormData] = useState({
-        date: bookDate,
-        startTime: `${String(startH).padStart(2, '0')}:00`,
+        date: defaults.dateStr,
+        startTime: defaults.timeStr,
         duration: 1, // in hours
         purpose: '', 
         isRecurring: false, 
@@ -286,14 +296,25 @@ const BookingPage = () => {
                     <div className="card" style={{ padding: '2rem' }}>
                         {step === 1 && (
                             <div className="animate-in">
-                                <h2 className="mb-6 flex items-center gap-2" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
-                                    <Calendar size={22} className="text-primary" /> Select Your Lab Slot
-                                </h2>
+                                <div className="flex justify-between items-start mb-6">
+                                    <h2 className="flex items-center gap-2" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                                        <Calendar size={22} className="text-primary" /> Select Your Lab Slot
+                                    </h2>
+                                    <div className="flex flex-col items-end">
+                                        <div className="flex items-center gap-2 text-slate-100 font-black tracking-tighter" style={{ fontSize: '1.1rem' }}>
+                                            <div className="w-1 h-4 bg-primary rounded-full"></div>
+                                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                        <div className="text-[0.55rem] font-black text-slate-500 uppercase tracking-widest">
+                                            {currentTime.toLocaleDateString([], { weekday: 'short' })}, {currentTime.toLocaleDateString([], { day: '2-digit', month: 'short' })}
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="grid-2 gap-4">
                                     <div className="form-group">
                                         <label>Preferred Date</label>
-                                        <input type="date" className="form-control" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} min={new Date().toISOString().split('T')[0]} />
+                                        <input type="date" className="form-control" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} min={defaults.dateStr} max={defaults.maxDateStr} />
                                     </div>
                                     <div className="form-group">
                                         <label>Start Time</label>

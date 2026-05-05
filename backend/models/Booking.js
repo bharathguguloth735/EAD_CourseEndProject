@@ -21,6 +21,8 @@ const BookingSchema = new mongoose.Schema({
     parentBookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
     attended:      { type: Boolean, default: false },
     attendanceTime:{ type: Date },
+    staffRating:   { type: Number, min: 1, max: 5 },
+    staffReview:   { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', BookingSchema);

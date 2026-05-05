@@ -401,5 +401,31 @@ router.put('/:id/attend', auth, async (req, res) => {
     }
 });
 
+// Submit staff review for a session
+router.put('/:id/review', require('../middleware/auth').staffAuth, async (req, res) => {
+    try {
+        const { rating, review } = req.body;
+        const booking = await Booking.findById(req.params.id);
+        if (!booking) return res.status(404).json({ msg: 'Booking not found' });
+        
+        booking.staffRating = rating;
+        booking.staffReview = review;
+        await booking.save();
+
+        // Notify user about the feedback
+        const notification = new Notification({
+            userId: booking.userId,
+            title: 'Performance Evaluated',
+            message: `Staff has added feedback for your session on ${booking.date}.`,
+            type: 'info'
+        });
+        await notification.save();
+
+        res.json(booking);
+    } catch (err) {
+        res.status(500).json({ msg: `Server error: ${err.message}` });
+    }
+});
+
 module.exports = router;
 

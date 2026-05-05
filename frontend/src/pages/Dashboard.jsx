@@ -33,6 +33,7 @@ const Dashboard = () => {
     const [dataLoading, setDataLoading] = useState(false);
     const qrRefs = useRef({});
     const [reviewModal, setReviewModal] = useState({ open: false, booking: null, rating: 5, performance: 5, cleanliness: 5, review: '' });
+    const [staffReviewModal, setStaffReviewModal] = useState({ open: false, booking: null, rating: 5, review: '' });
 
     const fetchData = React.useCallback(async () => {
         const token = localStorage.getItem('token');
@@ -251,6 +252,18 @@ const Dashboard = () => {
         } catch { toast.error('Failed to submit feedback'); }
     };
 
+    const handleStaffReviewSubmit = async () => {
+        try {
+            await axios.put(`http://localhost:5000/api/bookings/${staffReviewModal.booking._id}/review`, {
+                rating: staffReviewModal.rating,
+                review: staffReviewModal.review
+            }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+            toast.success('Student evaluation recorded!');
+            setStaffReviewModal({ open: false, booking: null, rating: 5, review: '' });
+            fetchData();
+        } catch { toast.error('Failed to submit evaluation'); }
+    };
+
     const roleLower = user?.role?.toLowerCase() || 'student';
 
     return (
@@ -269,7 +282,7 @@ const Dashboard = () => {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    {user.role?.toLowerCase() === 'student' && (
+                    {['student', 'admin'].includes(user.role?.toLowerCase()) && (
                         <button 
                             onClick={() => navigate('/equipment')} 
                             className="btn btn-primary" 
@@ -288,7 +301,7 @@ const Dashboard = () => {
                                 boxShadow: '0 4px 15px rgba(59,130,246,0.3)'
                             }}
                         >
-                            + New Mission
+                            <Zap size={16} fill="currentColor" style={{ marginRight: '8px' }} /> {user.role === 'Admin' ? 'Resource Control' : '+ New Mission'}
                         </button>
                     )}
                 </div>
@@ -648,7 +661,10 @@ const Dashboard = () => {
                                                         </td>
                                                         <td style={{ padding: '1.25rem' }}>
                                                             {b.attended ? (
-                                                                <span style={{ color: '#10b981', fontSize: '0.65rem', fontWeight: 900, background: 'rgba(16,185,129,0.1)', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid rgba(16,185,129,0.2)' }}>PRESENT</span>
+                                                                <div className="flex flex-col gap-2">
+                                                                    <span style={{ color: '#10b981', fontSize: '0.65rem', fontWeight: 900, background: 'rgba(16,185,129,0.1)', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid rgba(16,185,129,0.2)', width: 'fit-content' }}>PRESENT</span>
+                                                                    <button onClick={() => setStaffReviewModal({ open: true, booking: b, rating: b.staffRating || 5, review: b.staffReview || '' })} className="btn btn-primary btn-sm px-2 py-1" style={{ fontSize: '0.6rem', fontWeight: 900 }}>EVALUATE</button>
+                                                                </div>
                                                             ) : (
                                                                 <span style={{ color: '#ef4444', fontSize: '0.65rem', fontWeight: 900, background: 'rgba(239,68,68,0.1)', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid rgba(239,68,68,0.2)' }}>ABSENT</span>
                                                             )}
@@ -785,6 +801,9 @@ const Dashboard = () => {
                                                         <td style={{ padding: '1.25rem', verticalAlign: 'middle' }}>
                                                             <div className="flex gap-2">
                                                                 <button onClick={() => downloadReceipt(b)} className="protocol-btn" style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)' }} title="Download Protocol Receipt"><Download size={15} /></button>
+                                                                {['Staff', 'Admin'].includes(user.role) && b.attended && (
+                                                                    <button onClick={() => setStaffReviewModal({ open: true, booking: b, rating: b.staffRating || 5, review: b.staffReview || '' })} className="protocol-btn" style={{ padding: '0.5rem', background: 'rgba(59,130,246,0.1)', color: 'var(--primary)' }} title="Evaluate Researcher"><Star size={15} /></button>
+                                                                )}
                                                                 {user.role?.toLowerCase() === 'student' && isUpcoming && !b.attended && (() => {
                                                                     const now = new Date();
                                                                     const bDate = new Date(b.date);
@@ -901,6 +920,56 @@ const Dashboard = () => {
                     )}
                 </div>
             </div>
+            {/* Staff Review Modal */}
+            {staffReviewModal.open && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] p-4 backdrop-blur-sm">
+                    <div className="card w-full max-w-md animate-in" style={{ padding: '2rem', border: '1px solid var(--primary)' }}>
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 style={{ fontWeight: 900, fontSize: '1.1rem' }}>PERSONNEL EVALUATION</h3>
+                            <button onClick={() => setStaffReviewModal({ ...staffReviewModal, open: false })} className="text-muted"><X size={20} /></button>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 mb-8 p-4 bg-white/5 rounded-xl border border-white/5">
+                            <div className="profile-avatar" style={{ width: '40px', height: '40px', margin: 0 }}>{staffReviewModal.booking?.userId?.name?.charAt(0)}</div>
+                            <div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{staffReviewModal.booking?.userId?.name}</div>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Assigned to: {staffReviewModal.booking?.equipmentId?.name}</div>
+                            </div>
+                        </div>
+
+                        <div className="form-group mb-6">
+                            <label className="flex justify-between">Performance Rating <span>{staffReviewModal.rating}/5</span></label>
+                            <div className="flex gap-2 mt-3">
+                                {[1, 2, 3, 4, 5].map(r => (
+                                    <button 
+                                        key={r} 
+                                        onClick={() => setStaffReviewModal({ ...staffReviewModal, rating: r })}
+                                        className={`flex-1 h-10 rounded-lg border flex items-center justify-center transition-all ${staffReviewModal.rating >= r ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 border-white/10 text-slate-500'}`}
+                                    >
+                                        <Star size={16} fill={staffReviewModal.rating >= r ? 'currentColor' : 'none'} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="form-group mb-8">
+                            <label>Professional Feedback</label>
+                            <textarea 
+                                className="form-control" 
+                                rows={4} 
+                                placeholder="Assess the researcher's technical proficiency, safety compliance, and laboratory conduct..."
+                                value={staffReviewModal.review}
+                                onChange={e => setStaffReviewModal({ ...staffReviewModal, review: e.target.value })}
+                                style={{ fontSize: '0.85rem' }}
+                            ></textarea>
+                        </div>
+
+                        <button onClick={handleStaffReviewSubmit} className="btn btn-primary w-full h-12 font-black tracking-widest uppercase text-[0.75rem]">
+                            SUBMIT EVALUATION
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

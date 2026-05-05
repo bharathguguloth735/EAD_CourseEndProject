@@ -170,6 +170,35 @@ const Home = () => {
                 </div>
             </div>
 
+            {/* Authenticated Student Announcement */}
+            {user && (
+                <div className="section" style={{ paddingTop: '0' }}>
+                    <div className="glass-panel p-8 flex flex-col lg:flex-row items-center gap-8 border-primary/20 bg-primary/5">
+                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <Shield size={32} />
+                        </div>
+                        <div className="flex-1 text-center lg:text-left">
+                            <div className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-primary mb-2">Student Prep Announcement</div>
+                            <h3 className="text-2xl font-black text-slate-100 mb-2">Lab Coat & Safety Gear Availability</h3>
+                            <p className="text-slate-400 text-sm max-w-2xl">
+                                To ensure maximum safety during experiments, professional-grade **White Lab Coats** are now available for all students. 
+                                Please visit the **Central Lab Counter** to settle the rental/purchase fee before your scheduled mission.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-2 min-w-[200px]">
+                            <div className="px-4 py-2 bg-black/40 rounded-xl border border-white/5 flex items-center gap-3">
+                                <CheckCircle size={14} className="text-primary" />
+                                <span className="text-[0.65rem] font-bold text-slate-300">Sizes Available (S–XXL)</span>
+                            </div>
+                            <div className="px-4 py-2 bg-black/40 rounded-xl border border-white/5 flex items-center gap-3">
+                                <Zap size={14} className="text-yellow-500" />
+                                <span className="text-[0.65rem] font-bold text-slate-300">Counter Payment Only</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* CTA Banner */}
             <div className="cta-banner">
                 <h2>{user ? "Ready for Your Next Experiment?" : "Ready to Book Your Experiment?"}</h2>
