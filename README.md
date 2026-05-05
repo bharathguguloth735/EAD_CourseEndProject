@@ -3,7 +3,7 @@
 A full-stack web application for students and staff to book lab equipment efficiently.
 
 ## Technologies Used
-- **Frontend**: React (Vite), React Router, Axios, pure CSS (Custom Dark Theme).
+- **Frontend**: React (Vite), React Router.
 - **Backend**: Node.js, Express, MongoDB (Mongoose), JWT, bcryptjs, json2csv.
 
 ## Features
